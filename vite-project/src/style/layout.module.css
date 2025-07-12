@@ -1,0 +1,37 @@
+.container {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+  }
+  
+  .sidebar {
+    width: 300px;
+    background-color: #f4f4f4;
+    padding: 20px;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+  }
+  
+  .mapArea {
+    flex: 1;
+  }
+  
+  .searchInput {
+    width: 100%;
+    padding: 8px;
+    margin: 10px 0;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+  
+  .resultList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .resultList li {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ddd;
+  }
