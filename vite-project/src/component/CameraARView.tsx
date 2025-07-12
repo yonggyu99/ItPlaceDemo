@@ -25,108 +25,94 @@ const CameraARView: React.FC = () => {
   const [coords, setCoords] = useState<Coords | null>(null);
   const [angle, setAngle] = useState<number>(0);
   const [visibleStores, setVisibleStores] = useState<any[]>([]);
+  const [logs, setLogs] = useState<string[]>([]); // 📋 로그용 state
 
+  // 위치 추적
   useEffect(() => {
-    // 위치 추적
-    const watchId = navigator.geolocation.watchPosition(
+    navigator.geolocation.watchPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
         setCoords({ latitude, longitude });
-        console.log('📍 위치 갱신됨:', latitude, longitude);
+        setLogs(prev => [`📍 위치 갱신됨: ${latitude}, ${longitude}`, ...prev]);
       },
       (err) => console.error('위치 오류', err),
       { enableHighAccuracy: true, maximumAge: 1000 }
     );
 
-    return () => {
-      navigator.geolocation.clearWatch(watchId);
-    };
-  }, []);
-
-  useEffect(() => {
-    // 자이로센서 방향 처리
     const handleOrientation = (e: DeviceOrientationEvent) => {
-      let heading = 0;
-      if (typeof e.webkitCompassHeading === 'number') {
-        heading = e.webkitCompassHeading;
-      } else if (e.alpha !== null) {
-        heading = 360 - e.alpha;
-      }
-      heading = (heading + 360) % 360;
+      const heading = typeof e.webkitCompassHeading === 'number'
+        ? e.webkitCompassHeading
+        : e.alpha !== null ? 360 - e.alpha : 0;
+
       setAngle(heading);
     };
 
-    const enableOrientation = async () => {
-      try {
-        if (
-          typeof DeviceOrientationEvent !== 'undefined' &&
-          typeof DeviceOrientationEvent.requestPermission === 'function'
-        ) {
-          const permission = await DeviceOrientationEvent.requestPermission();
-          if (permission === 'granted') {
+    if (window.DeviceOrientationEvent && typeof window.DeviceOrientationEvent.requestPermission === 'function') {
+      window.DeviceOrientationEvent.requestPermission()
+        .then((res) => {
+          if (res === 'granted') {
             window.addEventListener('deviceorientation', handleOrientation, true);
-          } else {
-            console.warn('자이로센서 권한 거부됨');
           }
-        } else {
-          window.addEventListener('deviceorientation', handleOrientation, true);
-        }
-      } catch (error) {
-        console.error('자이로센서 에러:', error);
-      }
-    };
-
-    enableOrientation();
+        }).catch(console.error);
+    } else {
+      window.addEventListener('deviceorientationabsolute' in window ? 'deviceorientationabsolute' : 'deviceorientation', handleOrientation, true);
+    }
 
     return () => {
       window.removeEventListener('deviceorientation', handleOrientation);
     };
   }, []);
 
-  useEffect(() => {
-    // 카메라 초기화
-    const initCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        if (videoRef.current) videoRef.current.srcObject = stream;
-      } catch (err) {
-        console.error('❌ 카메라 접근 실패:', err);
-      }
-    };
-    initCamera();
-  }, []);
-
+  // 스토어 필터링
   useEffect(() => {
     if (!coords) return;
 
+    const newLogs: string[] = [];
+
     const results = membershipStores.filter((store) => {
       const dist = getDistance(coords.latitude, coords.longitude, store.lat, store.lng);
-
       const storeAngle = Math.atan2(
         store.lng - coords.longitude,
         store.lat - coords.latitude
       ) * (180 / Math.PI);
-      const storeAngle360 = (storeAngle + 360) % 360;
 
+      const storeAngle360 = (storeAngle + 360) % 360;
       const diff = Math.abs(angle - storeAngle360);
       const angleDiff = Math.min(diff, 360 - diff);
 
-      console.log(`🔍 ${store.name} 거리: ${dist.toFixed(1)}m | 각도차: ${angleDiff.toFixed(1)}°`);
+      const logLine = `🔍 ${store.name} 거리: ${dist.toFixed(1)}m | 각도차: ${angleDiff.toFixed(1)}°`;
+      newLogs.push(logLine);
 
       if (dist <= 1000 && angleDiff <= 60) {
-        console.log('✅ 표시됨:', store.name);
+        newLogs.push(`✅ 표시됨: ${store.name}`);
         return true;
       } else {
-        console.log('⛔ 제외됨:', store.name);
+        newLogs.push(`⛔ 제외됨: ${store.name}`);
         return false;
       }
     });
 
     setVisibleStores(results);
+    setLogs(prev => [...newLogs, ...prev].slice(0, 30)); // 최신 30개 로그 유지
   }, [coords, angle]);
+
+  // 카메라 시작
+  useEffect(() => {
+    const initCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        if (videoRef.current) videoRef.current.srcObject = stream;
+      } catch (err) {
+        console.error('카메라 접근 실패', err);
+      }
+    };
+
+    initCamera();
+  }, []);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100vh' }}>
+      {/* 📷 비디오 */}
       <video
         ref={videoRef}
         autoPlay
@@ -139,32 +125,46 @@ const CameraARView: React.FC = () => {
           position: 'absolute',
           top: 0,
           left: 0,
-          zIndex: 1,
+          zIndex: 1
         }}
       />
 
+      {/* 🏪 오버레이 */}
       {visibleStores.map((store, i) => (
-        <div
-          key={i}
-          style={{
-            position: 'absolute',
-            top: `${20 + i * 60}px`,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'rgba(255, 86, 122, 0.9)',
-            color: '#fff',
-            padding: '8px 12px',
-            borderRadius: '8px',
-            fontSize: '14px',
-            zIndex: 10,
-            boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
-          }}
-        >
-          <strong>{store.name}</strong>
-          <br />
+        <div key={i} style={{
+          position: 'absolute',
+          top: `${20 + i * 60}px`,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#ff567a',
+          color: '#fff',
+          padding: '8px 12px',
+          borderRadius: '8px',
+          fontSize: '14px',
+          zIndex: 10
+        }}>
+          <strong>{store.name}</strong><br />
           혜택: {store.benefit}
         </div>
       ))}
+
+      {/* 📋 로그 출력창 */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        width: '100%',
+        maxHeight: '30vh',
+        overflowY: 'auto',
+        background: 'rgba(0,0,0,0.75)',
+        color: '#0f0',
+        fontSize: '12px',
+        lineHeight: '1.5',
+        padding: '8px',
+        zIndex: 999
+      }}>
+        {logs.map((log, i) => <div key={i}>{log}</div>)}
+      </div>
     </div>
   );
 };
