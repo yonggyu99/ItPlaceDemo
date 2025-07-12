@@ -45,16 +45,29 @@ const CameraARView: React.FC = () => {
       { enableHighAccuracy: true, maximumAge: 1000 }
     );
 
+    const headingBuffer = useRef<number[]>([]);
+    
     const handleOrientation = (e: DeviceOrientationEvent) => {
-      const heading =
-        typeof e.webkitCompassHeading === 'number'
-          ? e.webkitCompassHeading
-          : e.alpha !== null
-          ? 360 - e.alpha
-          : 0;
-
+      let heading = 0;
+    
+      if (typeof e.webkitCompassHeading === 'number') {
+        // ✅ iOS
+        heading = e.webkitCompassHeading;
+      } else if (e.alpha !== null) {
+        // ✅ Android
+        heading = 360 - e.alpha;
+    
+        // 보정: 최근 값 평균 (흔들림 방지)
+        headingBuffer.current.push(heading);
+        if (headingBuffer.current.length > 10) {
+          headingBuffer.current.shift(); // 최대 10개 유지
+        }
+        heading =
+          headingBuffer.current.reduce((sum, h) => sum + h, 0) /
+          headingBuffer.current.length;
+      }
+    
       setAngle(heading);
-      // appendLog(`🧭 현재 방위: ${heading.toFixed(1)}°`);
     };
 
     if (
