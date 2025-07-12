@@ -5,21 +5,6 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite + React</title>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://unpkg.com/aframe-ar@1.8.0/aframe-ar.min.js"></script>
-    <script src="https://unpkg.com/aframe-gps-entity-place/dist/aframe-gps-entity-place.min.js"></script>
-    <script>
-      AFRAME.registerComponent('rotation-reader', {
-        tick: function () {
-          const rotation = this.el.object3D.rotation;
-          this.el.setAttribute('rotation-text', {
-            x: THREE.Math.radToDeg(rotation.x),
-            y: THREE.Math.radToDeg(rotation.y),
-            z: THREE.Math.radToDeg(rotation.z),
-          });
-        },
-      });
-    </script>
   </head>
   <body>
     <div id="root"></div>
