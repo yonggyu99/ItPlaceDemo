@@ -1,43 +1,87 @@
+// CameraARView.tsx
 import React, { useEffect, useState } from 'react';
 import { membershipStores } from '../assets/membershipData';
 
 const CameraARView: React.FC = () => {
-  const [permissionGranted, setPermissionGranted] = useState(false);
+  const [step, setStep] = useState<'intro' | 'loading' | 'ready'>('intro');
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
 
   const appendLog = (msg: string) => {
     setDebugLogs((prev) => [...prev.slice(-10), msg]);
   };
 
-  useEffect(() => {
-    const checkPermission = async () => {
-      if (
-        typeof DeviceOrientationEvent !== 'undefined' &&
-        typeof DeviceOrientationEvent.requestPermission === 'function'
-      ) {
-        try {
-          const permission = await DeviceOrientationEvent.requestPermission();
-          if (permission === 'granted') {
-            appendLog('✅ Device orientation permission granted');
-            setPermissionGranted(true);
-          } else {
-            appendLog('❌ Permission denied');
-          }
-        } catch (err: any) {
-          appendLog(`❌ Permission error: ${err.message}`);
-        }
-      } else {
-        appendLog('ℹ️ Permission not required (non-iOS)');
-        setPermissionGranted(true);
-      }
-    };
+  const handleStart = async () => {
+    appendLog('🔄 사용자 액션으로 권한 요청 시작');
+    setStep('loading');
 
-    checkPermission();
+    if (
+      typeof DeviceOrientationEvent !== 'undefined' &&
+      typeof DeviceOrientationEvent.requestPermission === 'function'
+    ) {
+      try {
+        const permission = await DeviceOrientationEvent.requestPermission();
+        if (permission === 'granted') {
+          appendLog('✅ 기기 방향 권한 승인');
+          setStep('ready');
+        } else {
+          appendLog('❌ 권한 거부');
+          setStep('intro');
+        }
+      } catch (err: any) {
+        appendLog(`❌ 권한 요청 오류: ${err.message}`);
+        setStep('intro');
+      }
+    } else {
+      appendLog('ℹ️ 권한 요청 불필요 (Android)');
+      setStep('ready');
+    }
+  };
+
+  useEffect(() => {
+    appendLog('📱 AR 페이지 진입');
   }, []);
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
-      {permissionGranted ? (
+      {step === 'intro' && (
+        <button
+          onClick={handleStart}
+          style={{
+            position: 'absolute',
+            top: '40%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 999,
+            padding: '12px 24px',
+            fontSize: '18px',
+            backgroundColor: '#ff567a',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+          }}
+        >
+          AR 보기 시작하기
+        </button>
+      )}
+
+      {step === 'loading' && (
+        <div
+          style={{
+            color: 'white',
+            background: 'black',
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '18px',
+          }}
+        >
+          권한 요청 중입니다...
+        </div>
+      )}
+
+      {step === 'ready' && (
         <a-scene
           vr-mode-ui="enabled: false"
           embedded
@@ -53,20 +97,9 @@ const CameraARView: React.FC = () => {
               scale="20 20 20"
             ></a-entity>
           ))}
+
           <a-camera gps-camera rotation-reader></a-camera>
         </a-scene>
-      ) : (
-        <div
-          style={{
-            color: 'white',
-            background: 'black',
-            width: '100%',
-            height: '100%',
-            padding: '20px',
-          }}
-        >
-          권한 요청 중입니다...
-        </div>
       )}
 
       {/* 디버깅 로그 */}
