@@ -35,3 +35,14 @@
     padding-bottom: 8px;
     border-bottom: 1px solid #ddd;
   }
+
+  @media (max-width: 768px) {
+    .sideBar {
+      display: none;
+    }
+  }
+  
+  .mapArea {
+    flex: 1;
+    position: relative;
+  }
