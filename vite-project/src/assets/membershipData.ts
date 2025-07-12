@@ -8,6 +8,8 @@ export interface MembershipStore {
 }
 
 export const membershipStores: MembershipStore[] = [
+  
+  { name: "GS25상계반디점", lat: 37.66736198, lng: 127.06684407, benefit: "GS25 할인" },
   { name: "GS25대연용소초교점", lat: 35.13988407, lng: 129.1035224, benefit: "도넛 무료 추가" },
   { name: "도미노피자용호 남천점", lat: 35.13865175, lng: 129.103392, benefit: "샌드위치 10% 할인" },
   { name: "파리바게뜨대연 혁신점", lat: 35.13856751, lng: 129.1009763, benefit: "학생 할인 5%" },
