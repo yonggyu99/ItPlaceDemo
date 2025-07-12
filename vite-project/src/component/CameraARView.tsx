@@ -54,7 +54,7 @@ const CameraARView: React.FC = () => {
           : 0;
 
       setAngle(heading);
-      appendLog(`🧭 현재 방위: ${heading.toFixed(1)}°`);
+      // appendLog(`🧭 현재 방위: ${heading.toFixed(1)}°`);
     };
 
     if (
