@@ -37,7 +37,7 @@
   }
 
   @media (max-width: 768px) {
-    .sideBar {
+    .sidebar {
       display: none;
     }
   }

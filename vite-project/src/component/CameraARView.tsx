@@ -66,7 +66,7 @@ const CameraARView: React.FC = () => {
 
     const results = membershipStores.filter((store) => {
       const distance = getDistance(currentPos.lat, currentPos.lng, store.lat, store.lng);
-      if (distance > 1000) return false; // 반경 200m 이내만
+      if (distance > 3000) return false; // 반경 200m 이내만
 
       const bearing = getBearing(currentPos.lat, currentPos.lng, store.lat, store.lng);
       const diff = Math.abs(bearing - currentHeading);
