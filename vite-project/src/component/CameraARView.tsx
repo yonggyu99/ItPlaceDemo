@@ -85,7 +85,7 @@ const CameraARView: React.FC = () => {
 
       console.log(`🔍 ${store.name} 거리: ${dist.toFixed(1)}m | 각도차: ${angleDiff.toFixed(1)}°`);
 
-      if (dist <= 1000 && angleDiff <= 60) {
+      if (dist <= 1000 && angleDiff <= 45) {
         console.log('✅ 표시됨:', store.name);
         return true;
       } else {
