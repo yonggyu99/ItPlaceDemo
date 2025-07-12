@@ -31,6 +31,8 @@ const CameraARView: React.FC = () => {
     setDebugLogs((prev) => [...prev.slice(-10), msg]); // 최근 10개 유지
   };
 
+  
+  const headingBuffer = useRef<number[]>([]);
   useEffect(() => {
     navigator.geolocation.watchPosition(
       (pos) => {
@@ -45,8 +47,7 @@ const CameraARView: React.FC = () => {
       { enableHighAccuracy: true, maximumAge: 1000 }
     );
 
-    const headingBuffer = useRef<number[]>([]);
-    
+
     const handleOrientation = (e: DeviceOrientationEvent) => {
       let heading = 0;
     
